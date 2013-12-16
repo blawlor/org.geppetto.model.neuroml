@@ -603,7 +603,7 @@ public class NeuroMLModelInterpreterService implements IModelInterpreter
 		{
 			Sphere sphere = new Sphere();
 			sphere.setRadius(proximal.getDiameter() / 2);
-			sphere.setPosition(getPoint(proximal));
+			sphere.setP(getPoint(proximal));
 			sphere.setId(s.getId().toString());
 			return sphere;
 		}
@@ -613,7 +613,7 @@ public class NeuroMLModelInterpreterService implements IModelInterpreter
 			cyl.setId(s.getId().toString());
 			if(proximal != null)
 			{
-				cyl.setPosition(getPoint(proximal));
+				cyl.setP(getPoint(proximal));
 				cyl.setRadiusBottom(proximal.getDiameter() / 2);
 			}
 
