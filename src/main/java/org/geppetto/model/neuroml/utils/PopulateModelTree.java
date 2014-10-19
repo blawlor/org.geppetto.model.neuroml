@@ -127,8 +127,12 @@ public class PopulateModelTree {
 					// Passive conductance density				
 					channelDensityNode.addChild(PopulateModelTreeUtils.createParameterSpecificationNode(Resources.COND_DENSITY, "condDensity_"+channelDensity.getId(), channelDensity.getCondDensity()));
 					
+					TextMetadataNode textNode = 
+							new TextMetadataNode("ion_"+channelDensity.getId());
+					textNode.setName(Resources.ION.get());
+					textNode.setValue(new StringValue(channelDensity.getIon()));
 					// ION	
-					channelDensityNode.addChild(new TextMetadataNode(Resources.ION.get(), "ion_"+channelDensity.getId(),  new StringValue(channelDensity.getIon())));
+					channelDensityNode.addChild(textNode);
 					
 					// Ion Channel
 					CompositeNode ionChannelNode = new CompositeNode(Resources.ION_CHANNEL.get(), channelDensity.getIonChannel());
@@ -199,8 +203,13 @@ public class PopulateModelTree {
 					// Initial External Concentration
 					specieNode.addChild(PopulateModelTreeUtils.createParameterSpecificationNode(Resources.INIT_EXT_CONCENTRATION, "initialExtConcentration_"+specie.getId(), specie.getInitialExtConcentration()));
 					
+					TextMetadataNode textNode = 
+							new TextMetadataNode("ion_"+specie.getId());
+					textNode.setName(Resources.ION.get());
+					textNode.setValue(new StringValue(specie.getIon()));
+					
 					// Ion
-					specieNode.addChild(new TextMetadataNode(Resources.ION.get(), "ion_"+specie.getId(),  new StringValue(specie.getIon())));
+					specieNode.addChild(textNode);
 					
 					// Concentration Model
 					//TODO: We need to work on this nested element
