@@ -150,6 +150,16 @@ public class LEMSModelInterpreterService implements IModelInterpreter
 	{
 		return _neuroMLModelInterpreter.populateRuntimeTree(aspectNode);
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.IModelInterpreter#populateModelTree(org.geppetto.core.model.runtime.AspectNode,java.lang.String)
+	 */
+	@Override
+	public boolean writeModel(AspectNode aspectNode, String format) throws ModelInterpreterException {
+		return _neuroMLModelInterpreter.writeModel(aspectNode, format);
+	}
 
 	@Override
 	public String getName()

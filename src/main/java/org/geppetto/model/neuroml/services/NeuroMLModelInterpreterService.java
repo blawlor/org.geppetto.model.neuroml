@@ -33,6 +33,7 @@
 
 package org.geppetto.model.neuroml.services;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -78,6 +79,8 @@ import org.lemsml.jlems.api.LEMSDocumentReader;
 import org.lemsml.jlems.api.interfaces.ILEMSDocument;
 import org.lemsml.jlems.api.interfaces.ILEMSDocumentReader;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.type.Lems;
+import org.neuroml.export.neuron.NeuronWriter;
 import org.neuroml.model.Base;
 import org.neuroml.model.BaseCell;
 import org.neuroml.model.BaseConductanceBasedSynapse;
@@ -114,7 +117,7 @@ public class NeuroMLModelInterpreterService implements IModelInterpreter
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.openworm.simulationengine.core.model.IModelProvider#readModel(java .lang.String)
+	 * @see org.openworm.simulationengine.core.model.IModelProvider#readModel(java.lang.String)
 	 */
 	public IModel readModel(URL url, List<URL> recordings, String instancePath) throws ModelInterpreterException
 	{
@@ -228,6 +231,34 @@ public class NeuroMLModelInterpreterService implements IModelInterpreter
 			throw new ModelInterpreterException(e);
 		}
 		return modified;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.IModelInterpreter#populateModelTree(org.geppetto.core.model.runtime.AspectNode,java.lang.String)
+	 */
+	@Override
+	public boolean writeModel(AspectNode aspectNode, String format) throws ModelInterpreterException {
+		
+		IModel model = aspectNode.getModel();
+		Lems lems = (Lems) ((ModelWrapper) model).getModel(NeuroMLAccessUtility.LEMS_ID);
+
+		try {
+			File mainFile = File.createTempFile("temp-file-name", "_nrn.py"); 
+			NeuronWriter nw = new NeuronWriter(lems);
+			nw.setNoGui(true);
+
+	         ArrayList<File> ff = nw.generateMainScriptAndMods(mainFile);
+	         for (File f : ff) {
+	             System.out.println("Generated: " + f.getAbsolutePath());
+	         }
+         
+		} catch (Exception e) {
+			throw new ModelInterpreterException(e);
+		}
+         
+         return false;
 	}
 
 	/*
