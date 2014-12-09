@@ -245,7 +245,8 @@ public class NeuroMLModelInterpreterService implements IModelInterpreter
 		Lems lems = (Lems) ((ModelWrapper) model).getModel(NeuroMLAccessUtility.LEMS_ID);
 
 		try {
-			File mainFile = File.createTempFile("temp-file-name", "_nrn.py"); 
+			//TODO: where should we create the tmp file?
+			File mainFile = File.createTempFile("temp-file-name", "_nrn.py", new File("/home/adrian/tmp/")); 
 			NeuronWriter nw = new NeuronWriter(lems);
 			nw.setNoGui(true);
 
