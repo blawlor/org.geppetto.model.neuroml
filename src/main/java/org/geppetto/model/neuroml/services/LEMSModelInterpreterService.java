@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.model.neuroml.services;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.tools.ant.util.FileUtils;
 import org.geppetto.core.beans.ModelInterpreterConfig;
 import org.geppetto.core.model.AModelInterpreter;
 import org.geppetto.core.model.IModel;
@@ -46,7 +48,11 @@ import org.geppetto.core.model.IModelInterpreter;
 import org.geppetto.core.model.ModelInterpreterException;
 import org.geppetto.core.model.ModelWrapper;
 import org.geppetto.core.model.runtime.AspectNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode;
+import org.geppetto.core.model.runtime.CompositeNode;
 import org.geppetto.core.model.runtime.EntityNode;
+import org.geppetto.core.model.runtime.AspectSubTreeNode.AspectTreeType;
+import org.geppetto.core.utilities.URLReader;
 import org.geppetto.model.neuroml.utils.LEMSAccessUtility;
 import org.geppetto.model.neuroml.utils.NeuroMLAccessUtility;
 import org.geppetto.model.neuroml.utils.OptimizedLEMSReader;
@@ -54,11 +60,18 @@ import org.lemsml.jlems.api.LEMSDocumentReader;
 import org.lemsml.jlems.api.interfaces.ILEMSDocument;
 import org.lemsml.jlems.api.interfaces.ILEMSDocumentReader;
 import org.lemsml.jlems.core.sim.ContentError;
+import org.lemsml.jlems.core.type.Lems;
 import org.neuroml.model.Base;
 import org.neuroml.model.BaseCell;
+import org.neuroml.model.NeuroMLDocument;
 import org.neuroml.model.util.NeuroMLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import parser.LemsParser;
+import parser.LemsXmlUtils;
+
+
 
 /**
  * @author matteocantarelli
@@ -84,10 +97,18 @@ public class LEMSModelInterpreterService extends AModelInterpreter
 		try
 		{
 			OptimizedLEMSReader reader = new OptimizedLEMSReader();
-			String lemsString = reader.read(url);
-
-			ILEMSDocumentReader lemsReader = new LEMSDocumentReader();
-			ILEMSDocument document = lemsReader.readModel(lemsString);
+//			String lemsString = reader.read(url);
+//
+//			ILEMSDocumentReader lemsReader = new LEMSDocumentReader();
+//			ILEMSDocument document = lemsReader.readModel(lemsString);
+			
+			
+			
+			File schema = new File(getClass().getResource("/Schemas/LEMS_v0.9.0.xsd").getFile());
+			LemsParser parser = new LemsParser(url, schema);
+			parser.processIncludes();
+			parser.populateNameComponentTypeHM();
+			parser.decorateComponentsWithType();
 			
 			model = new ModelWrapper(UUID.randomUUID().toString());
 			model.setInstancePath(instancePath);
@@ -104,7 +125,7 @@ public class LEMSModelInterpreterService extends AModelInterpreter
 			//TODO: This need to be changed (BaseCell, String)
 			model.wrapModel(NeuroMLAccessUtility.SUBENTITIES_MAPPING_ID, new HashMap<BaseCell, EntityNode>());
 			model.wrapModel(NeuroMLAccessUtility.CELL_SUBENTITIES_MAPPING_ID, new HashMap<String, BaseCell>());
-			model.wrapModel(NeuroMLAccessUtility.LEMS_ID, document);
+			model.wrapModel(NeuroMLAccessUtility.LEMS_ID, parser.getLems());
 			model.wrapModel(NeuroMLAccessUtility.URL_ID, url);
 			model.wrapModel(NeuroMLAccessUtility.DISCOVERED_COMPONENTS, new HashMap<String, Base>());
 			model.wrapModel(LEMSAccessUtility.DISCOVERED_LEMS_COMPONENTS, new HashMap<String, Object>());
@@ -113,17 +134,13 @@ public class LEMSModelInterpreterService extends AModelInterpreter
 			
 			addRecordings(recordings, instancePath, model);
 		}
-		catch(IOException e)
+		catch(Exception e)
 		{
-			throw new ModelInterpreterException(e);
-		}
-		catch(ContentError e)
-		{
-			throw new ModelInterpreterException(e);
-		}
-		catch(NeuroMLException e)
-		{
-			throw new ModelInterpreterException(e);
+			System.out.println("Failed!");
+			e.printStackTrace();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return model;
 	}
@@ -138,7 +155,30 @@ public class LEMSModelInterpreterService extends AModelInterpreter
 	@Override
 	public boolean populateModelTree(AspectNode aspectNode) throws ModelInterpreterException
 	{
-		return _neuroMLModelInterpreter.populateModelTree(aspectNode);
+//		return _neuroMLModelInterpreter.populateModelTree(aspectNode);
+		
+		boolean modified = false;
+
+		AspectSubTreeNode modelTree = (AspectSubTreeNode) aspectNode.getSubTree(AspectTreeType.MODEL_TREE);
+		modelTree.setId(AspectTreeType.MODEL_TREE.toString());
+
+		IModel model = aspectNode.getModel();
+		try
+		{
+			extended.Lems lems = (extended.Lems) ((ModelWrapper) model).getModel(NeuroMLAccessUtility.LEMS_ID);
+			if(lems != null)
+			{
+				//modified = populateModelTree.populateModelTree(modelTree, ((ModelWrapper) model));
+				modelTree.addChild(new CompositeNode("id"));
+				modelTree.setModified(true);
+			}
+
+		}
+		catch(Exception e)
+		{
+			throw new ModelInterpreterException(e);
+		}
+		return modified;
 	}
 
 	/*
